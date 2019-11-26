@@ -218,6 +218,9 @@ public class AuthorizationManagementActivity extends Activity {
          */
 
         if (!mAuthorizationStarted) {
+            Intent keepAliveIntent = new Intent()
+                .setClassName(getPackageName(), KeepAliveService.class.getCanonicalName());
+            mAuthIntent.putExtra("android.support.customtabs.extra.KEEP_ALIVE", keepAliveIntent);
             startActivity(mAuthIntent);
             mAuthorizationStarted = true;
             return;
