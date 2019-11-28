@@ -96,9 +96,14 @@ public final class BrowserSelector {
         List<ResolveInfo> resolvedActivityList =
             pm.queryIntentActivities(BROWSER_INTENT, queryFlag);
 
-        // This workaround is needed, because on some older devices no browsers will be found if the opera browser is set as default browser.
-        if (resolvedActivityList.size() == 1 && resolvedActivityList.get(0).activityInfo.packageName.equals("com.opera.browser")) {
-            resolvedActivityList.remove(0);
+        ArrayList<String> resolvedPackageNames = new ArrayList<>();
+        for (ResolveInfo resolveInfo : resolvedActivityList) {
+            resolvedPackageNames.add(resolveInfo.activityInfo.packageName);
+        }
+
+        // This workaround is needed because on some older devices no browsers will be found if the opera (or opera beta) browser is set as default browser.
+        if (resolvedPackageNames.size() == 1 && (resolvedPackageNames.contains("com.opera.browser") || resolvedPackageNames.contains("com.opera.browser.beta")) ||
+            resolvedPackageNames.size() == 2 && resolvedPackageNames.contains("com.opera.browser") && resolvedPackageNames.contains("com.opera.browser.beta")) {
 
             // Chrome Beta, Firefox Klar and some other browsers can't be used because of missing custom intent filters (like "googlechrome://...")
             // Ecosia and Brave are listening for "googlechrome://" scheme
