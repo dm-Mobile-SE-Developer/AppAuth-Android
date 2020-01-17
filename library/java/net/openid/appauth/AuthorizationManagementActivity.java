@@ -136,7 +136,6 @@ public class AuthorizationManagementActivity extends Activity {
     @VisibleForTesting
     static final String KEY_AUTHORIZATION_STARTED = "authStarted";
 
-    private boolean blockOnResume = false;
     private boolean mAuthorizationStarted = false;
     private Intent mAuthIntent;
     private AuthorizationRequest mAuthRequest;
@@ -208,12 +207,6 @@ public class AuthorizationManagementActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Block additional onResume if activity has not been stopped
-        if (blockOnResume) {
-            return;
-        } else {
-            blockOnResume = true;
-        }
 
         /*
          * If this is the first run of the activity, start the authorization intent.
@@ -262,12 +255,6 @@ public class AuthorizationManagementActivity extends Activity {
         outState.putString(KEY_AUTH_REQUEST, mAuthRequest.jsonSerializeString());
         outState.putParcelable(KEY_COMPLETE_INTENT, mCompleteIntent);
         outState.putParcelable(KEY_CANCEL_INTENT, mCancelIntent);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        blockOnResume = false;
     }
 
     private void handleAuthorizationComplete() {
