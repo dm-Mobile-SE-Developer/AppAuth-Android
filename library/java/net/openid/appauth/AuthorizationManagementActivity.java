@@ -208,7 +208,13 @@ public class AuthorizationManagementActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Block additional onResume if activity has not been stopped
+
+        /*
+         * Block additional onResume if instance state has not been saved,
+         * in order to avoid finishing the activity before the RedirectUriReceiverActivity
+         * can handle the authorization result.
+         */
+
         if (blockOnResume) {
             return;
         } else {
@@ -262,11 +268,6 @@ public class AuthorizationManagementActivity extends Activity {
         outState.putString(KEY_AUTH_REQUEST, mAuthRequest.jsonSerializeString());
         outState.putParcelable(KEY_COMPLETE_INTENT, mCompleteIntent);
         outState.putParcelable(KEY_CANCEL_INTENT, mCancelIntent);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
         blockOnResume = false;
     }
 
