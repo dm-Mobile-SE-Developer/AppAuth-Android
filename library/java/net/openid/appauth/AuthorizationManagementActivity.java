@@ -136,6 +136,7 @@ public class AuthorizationManagementActivity extends Activity {
     @VisibleForTesting
     static final String KEY_AUTHORIZATION_STARTED = "authStarted";
 
+    private boolean blockOnResume = false;
     private boolean mAuthorizationStarted = false;
     private Intent mAuthIntent;
     private AuthorizationRequest mAuthRequest;
@@ -209,6 +210,18 @@ public class AuthorizationManagementActivity extends Activity {
         super.onResume();
 
         /*
+         * Block additional onResume if instance state has not been saved,
+         * in order to avoid finishing the activity before an OAuth2 redirect,
+         * or the user cancels the authorization flow.
+         */
+
+        if (blockOnResume) {
+            return;
+        } else {
+            blockOnResume = true;
+        }
+
+        /*
          * If this is the first run of the activity, start the authorization intent.
          * Note that we do not finish the activity at this point, in order to remain on the back
          * stack underneath the authorization activity.
@@ -255,6 +268,7 @@ public class AuthorizationManagementActivity extends Activity {
         outState.putString(KEY_AUTH_REQUEST, mAuthRequest.jsonSerializeString());
         outState.putParcelable(KEY_COMPLETE_INTENT, mCompleteIntent);
         outState.putParcelable(KEY_CANCEL_INTENT, mCancelIntent);
+        blockOnResume = false;
     }
 
     private void handleAuthorizationComplete() {
