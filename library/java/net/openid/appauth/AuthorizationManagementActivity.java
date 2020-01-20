@@ -214,8 +214,8 @@ public class AuthorizationManagementActivity extends Activity {
 
         /*
          * Block additional onResume if instance state has not been saved,
-         * in order to avoid finishing the activity before the RedirectUriReceiverActivity
-         * can handle the authorization result.
+         * in order to avoid finishing the activity before an OAuth2 redirect,
+         * or the user cancels the authorization flow.
          */
 
         if (blockOnResume) {
