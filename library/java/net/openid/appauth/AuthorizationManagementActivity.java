@@ -215,7 +215,7 @@ public class AuthorizationManagementActivity extends Activity {
          * or the user cancels the authorization flow.
          */
 
-        if (blockOnResume) {
+        if (blockOnResume && getIntent().getData() == null) {
             return;
         } else {
             blockOnResume = true;
