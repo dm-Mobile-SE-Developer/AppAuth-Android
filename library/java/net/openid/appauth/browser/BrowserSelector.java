@@ -132,16 +132,24 @@ public final class BrowserSelector {
                 continue;
             }
 
+            String packageName = info.activityInfo.packageName;
+
+            // ignore Firefox Preview (Fenix) and Firefox Klar because they are both not OAuth compatible at the moment
+            // https://github.com/mozilla-mobile/fenix/issues/7691
+            if (packageName.equals("org.mozilla.fenix") || packageName.equals("org.mozilla.klar")) {
+                continue;
+            }
+
             try {
                 int defaultBrowserIndex = 0;
                 PackageInfo packageInfo = pm.getPackageInfo(
-                    info.activityInfo.packageName,
+                    packageName,
                     PackageManager.GET_SIGNATURES);
 
-                if (hasWarmupService(pm, info.activityInfo.packageName)) {
+                if (hasWarmupService(pm, packageName)) {
                     BrowserDescriptor customTabBrowserDescriptor =
                         new BrowserDescriptor(packageInfo, true);
-                    if (info.activityInfo.packageName.equals(defaultBrowserPackage)) {
+                    if (packageName.equals(defaultBrowserPackage)) {
                         // If the default browser is having a WarmupService,
                         // will it be added to the beginning of the list.
                         browsers.add(defaultBrowserIndex, customTabBrowserDescriptor);
@@ -153,7 +161,7 @@ public final class BrowserSelector {
 
                 BrowserDescriptor fullBrowserDescriptor =
                     new BrowserDescriptor(packageInfo, false);
-                if (info.activityInfo.packageName.equals(defaultBrowserPackage)) {
+                if (packageName.equals(defaultBrowserPackage)) {
                     // The default browser is added to the beginning of the list.
                     // If there is support for Custom Tabs, will the one disabling Custom Tabs
                     // be added as the second entry.
