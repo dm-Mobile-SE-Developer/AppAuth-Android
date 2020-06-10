@@ -134,12 +134,6 @@ public final class BrowserSelector {
 
             String packageName = info.activityInfo.packageName;
 
-            // ignore Firefox Preview (Fenix) and Firefox Klar because they are both not OAuth compatible at the moment
-            // https://github.com/mozilla-mobile/fenix/issues/7691
-            if (packageName.equals("org.mozilla.fenix") || packageName.equals("org.mozilla.klar")) {
-                continue;
-            }
-
             try {
                 int defaultBrowserIndex = 0;
                 PackageInfo packageInfo = pm.getPackageInfo(
