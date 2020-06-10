@@ -96,36 +96,6 @@ public final class BrowserSelector {
         List<ResolveInfo> resolvedActivityList =
             pm.queryIntentActivities(BROWSER_INTENT, queryFlag);
 
-        ArrayList<String> resolvedPackageNames = new ArrayList<>();
-        for (ResolveInfo resolveInfo : resolvedActivityList) {
-            resolvedPackageNames.add(resolveInfo.activityInfo.packageName);
-        }
-
-        // This workaround is needed because on some older devices no browsers will be found if the opera (or opera beta) browser is set as default browser.
-        if (resolvedPackageNames.size() == 1 && (resolvedPackageNames.contains("com.opera.browser") || resolvedPackageNames.contains("com.opera.browser.beta")) ||
-            resolvedPackageNames.size() == 2 && resolvedPackageNames.contains("com.opera.browser") && resolvedPackageNames.contains("com.opera.browser.beta")) {
-
-            // Chrome Beta, Firefox Klar and some other browsers can't be used because of missing custom intent filters (like "googlechrome://...")
-            // Ecosia and Brave are listening for "googlechrome://" scheme
-            if (isPackageInstalled("com.android.chrome", pm) || isPackageInstalled("com.google.android.apps.chrome", pm)
-                || isPackageInstalled("com.ecosia.android", pm) || isPackageInstalled("com.brave.browser", pm)) {
-                List<ResolveInfo> resolveInfos = getResolveInfoListForBrowser(BrowserUri.CHROME, pm, queryFlag);
-                resolvedActivityList.addAll(resolveInfos);
-            }
-            if (isPackageInstalled("com.sec.android.app.sbrowser", pm)) {
-                List<ResolveInfo> resolveInfos = getResolveInfoListForBrowser(BrowserUri.SAMSUNG_INTERNET, pm, queryFlag);
-                resolvedActivityList.addAll(resolveInfos);
-            }
-            if (isPackageInstalled("org.mozilla.firefox", pm)) {
-                List<ResolveInfo> resolveInfos = getResolveInfoListForBrowser(BrowserUri.FIREFOX, pm, queryFlag);
-                resolvedActivityList.addAll(resolveInfos);
-            }
-            if (isPackageInstalled("com.microsoft.emmx", pm)) {
-                List<ResolveInfo> resolveInfos = getResolveInfoListForBrowser(BrowserUri.EDGE, pm, queryFlag);
-                resolvedActivityList.addAll(resolveInfos);
-            }
-        }
-
         for (ResolveInfo info : resolvedActivityList) {
             // ignore handlers which are not browsers
             if (!isFullBrowser(info)) {
@@ -169,20 +139,6 @@ public final class BrowserSelector {
         }
 
         return browsers;
-    }
-
-    private static List<ResolveInfo> getResolveInfoListForBrowser(Uri browserUri, PackageManager packageManager, int queryFlag) {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, browserUri);
-        return packageManager.queryIntentActivities(browserIntent, queryFlag);
-    }
-
-    private static boolean isPackageInstalled(String packageName, PackageManager packageManager) {
-        try {
-            packageManager.getPackageInfo(packageName, 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
     }
 
     /**
