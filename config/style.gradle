@@ -30,4 +30,4 @@ task failOnCheckstyleWarning {
 failOnCheckstyleWarning.dependsOn checkAllSource
 
 // run checkstyle as part of the standard set of checks
-check.dependsOn failOnCheckstyleWarning
+//check.dependsOn failOnCheckstyleWarning
