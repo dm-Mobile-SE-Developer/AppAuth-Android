@@ -17,16 +17,15 @@ package net.openid.appauth;
 import static net.openid.appauth.Preconditions.checkNotNull;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import net.openid.appauth.JsonUtil.BooleanField;
 import net.openid.appauth.JsonUtil.Field;
 import net.openid.appauth.JsonUtil.StringField;
 import net.openid.appauth.JsonUtil.StringListField;
 import net.openid.appauth.JsonUtil.UriField;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -50,6 +49,9 @@ public class AuthorizationServiceDiscovery {
 
     @VisibleForTesting
     static final UriField TOKEN_ENDPOINT = uri("token_endpoint");
+
+    @VisibleForTesting
+    static final UriField END_SESSION_ENDPOINT = uri("end_session_endpoint");
 
     @VisibleForTesting
     static final UriField USERINFO_ENDPOINT = uri("userinfo_endpoint");
@@ -257,6 +259,13 @@ public class AuthorizationServiceDiscovery {
     @Nullable
     public Uri getTokenEndpoint() {
         return get(TOKEN_ENDPOINT);
+    }
+
+    /**
+     * The OAuth 2 emd session endpoint URI. Not specified test OAuth implementation
+     */
+    public Uri getEndSessionEndpoint() {
+        return get(END_SESSION_ENDPOINT);
     }
 
     /**

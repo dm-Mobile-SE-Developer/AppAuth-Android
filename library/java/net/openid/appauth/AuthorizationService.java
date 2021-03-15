@@ -17,6 +17,7 @@ package net.openid.appauth;
 import static net.openid.appauth.Preconditions.checkNotNull;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -24,16 +25,15 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.customtabs.CustomTabsIntent;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.browser.customtabs.CustomTabsIntent;
 
 import net.openid.appauth.AuthorizationException.GeneralErrors;
 import net.openid.appauth.AuthorizationException.RegistrationRequestErrors;
 import net.openid.appauth.AuthorizationException.TokenRequestErrors;
-
 import net.openid.appauth.IdToken.IdTokenException;
 import net.openid.appauth.browser.BrowserDescriptor;
 import net.openid.appauth.browser.BrowserSelector;
@@ -41,7 +41,6 @@ import net.openid.appauth.browser.CustomTabManager;
 import net.openid.appauth.connectivity.ConnectionBuilder;
 import net.openid.appauth.internal.Logger;
 import net.openid.appauth.internal.UriUtil;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -225,6 +224,112 @@ public class AuthorizationService {
             @NonNull PendingIntent completedIntent,
             @Nullable PendingIntent canceledIntent,
             @NonNull CustomTabsIntent customTabsIntent) {
+        performAuthManagementRequest(
+                request,
+                completedIntent,
+                canceledIntent,
+                customTabsIntent);
+    }
+
+    /**
+     * Sends an end session request to the authorization service, using a
+     * [custom tab](https://developer.chrome.com/multidevice/android/customtabs)
+     * if available, or a browser instance.
+     * The parameters of this request are determined by both the authorization service
+     * configuration and the provided {@link EndSessionRequest request object}. Upon completion
+     * of this request, the provided {@link PendingIntent completion PendingIntent} will be invoked.
+     * If the user cancels the authorization request, the current activity will regain control.
+     */
+    public void performEndSessionRequest(
+            @NonNull EndSessionRequest request,
+            @NonNull PendingIntent completedIntent) {
+        performEndSessionRequest(
+                request,
+                completedIntent,
+                null,
+                createCustomTabsIntentBuilder().build());
+    }
+
+    /**
+     * Sends an end session request to the authorization service, using a
+     * [custom tab](https://developer.chrome.com/multidevice/android/customtabs)
+     * if available, or a browser instance.
+     * The parameters of this request are determined by both the authorization service
+     * configuration and the provided {@link EndSessionRequest request object}. Upon completion
+     * of this request, the provided {@link PendingIntent completion PendingIntent} will be invoked.
+     * If the user cancels the authorization request, the provided
+     * {@link PendingIntent cancel PendingIntent} will be invoked.
+     */
+    public void performEndSessionRequest(
+            @NonNull EndSessionRequest request,
+            @NonNull PendingIntent completedIntent,
+            @NonNull PendingIntent canceledIntent) {
+        performEndSessionRequest(
+                request,
+                completedIntent,
+                canceledIntent,
+                createCustomTabsIntentBuilder().build());
+    }
+
+    /**
+     * Sends an end session request to the authorization service, using a
+     * [custom tab](https://developer.chrome.com/multidevice/android/customtabs).
+     * The parameters of this request are determined by both the authorization service
+     * configuration and the provided {@link EndSessionRequest request object}. Upon completion
+     * of this request, the provided {@link PendingIntent completion PendingIntent} will be invoked.
+     * If the user cancels the authorization request, the current activity will regain control.
+     *
+     * @param customTabsIntent
+     *     The intent that will be used to start the custom tab. It is recommended that this intent
+     *     be created with the help of {@link #createCustomTabsIntentBuilder(Uri[])}, which will
+     *     ensure that a warmed-up version of the browser will be used, minimizing latency.
+     */
+    public void performEndSessionRequest(
+            @NonNull EndSessionRequest request,
+            @NonNull PendingIntent completedIntent,
+            @NonNull CustomTabsIntent customTabsIntent) {
+        performEndSessionRequest(
+                request,
+                completedIntent,
+                null,
+                customTabsIntent);
+    }
+
+    /**
+     * Sends an end session request to the authorization service, using a
+     * [custom tab](https://developer.chrome.com/multidevice/android/customtabs).
+     * The parameters of this request are determined by both the authorization service
+     * configuration and the provided {@link EndSessionRequest request object}. Upon completion
+     * of this request, the provided {@link PendingIntent completion PendingIntent} will be invoked.
+     * If the user cancels the authorization request, the provided
+     * {@link PendingIntent cancel PendingIntent} will be invoked.
+     *
+     * @param customTabsIntent
+     *     The intent that will be used to start the custom tab. It is recommended that this intent
+     *     be created with the help of {@link #createCustomTabsIntentBuilder(Uri[])}, which will
+     *     ensure that a warmed-up version of the browser will be used, minimizing latency.
+     *
+     * @throws android.content.ActivityNotFoundException if no suitable browser is available to
+     *     perform the authorization flow.
+     */
+    public void performEndSessionRequest(
+            @NonNull EndSessionRequest request,
+            @NonNull PendingIntent completedIntent,
+            @Nullable PendingIntent canceledIntent,
+            @NonNull CustomTabsIntent customTabsIntent) {
+        performAuthManagementRequest(
+                request,
+                completedIntent,
+                canceledIntent,
+                customTabsIntent);
+    }
+
+    private void performAuthManagementRequest(
+            @NonNull AuthorizationManagementRequest request,
+            @NonNull PendingIntent completedIntent,
+            @Nullable PendingIntent canceledIntent,
+            @NonNull CustomTabsIntent customTabsIntent) {
+
         checkNotDisposed();
         checkNotNull(request);
         checkNotNull(completedIntent);
@@ -237,6 +342,7 @@ public class AuthorizationService {
                 authIntent,
                 completedIntent,
                 canceledIntent));
+
     }
 
     /**
@@ -298,6 +404,64 @@ public class AuthorizationService {
     }
 
     /**
+     * Constructs an intent that encapsulates the provided request and custom tabs intent,
+     * and is intended to be launched via {@link Activity#startActivityForResult}.
+     * The parameters of this request are determined by both the authorization service
+     * configuration and the provided {@link AuthorizationRequest request object}. Upon completion
+     * of this request, the activity that gets launched will call {@link Activity#setResult} with
+     * {@link Activity#RESULT_OK} and an {@link Intent} containing authorization completion
+     * information. If the user presses the back button or closes the browser tab, the launched
+     * activity will call {@link Activity#setResult} with
+     * {@link Activity#RESULT_CANCELED} without a data {@link Intent}. Note that
+     * {@link Activity#RESULT_OK} indicates the authorization request completed,
+     * not necessarily that it was a successful authorization.
+     *
+     * @param customTabsIntent
+     *     The intent that will be used to start the custom tab. It is recommended that this intent
+     *     be created with the help of {@link #createCustomTabsIntentBuilder(Uri[])}, which will
+     *     ensure that a warmed-up version of the browser will be used, minimizing latency.
+     *
+     * @throws android.content.ActivityNotFoundException if no suitable browser is available to
+     *     perform the authorization flow.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public Intent getEndSessionRequestIntent(
+            @NonNull EndSessionRequest request,
+            @NonNull CustomTabsIntent customTabsIntent) {
+
+        Intent authIntent = prepareAuthorizationRequestIntent(request, customTabsIntent);
+        return AuthorizationManagementActivity.createStartForResultIntent(
+            mContext,
+            request,
+            authIntent);
+    }
+
+    /**
+     * Constructs an intent that encapsulates the provided request and a default custom tabs intent,
+     * and is intended to be launched via {@link Activity#startActivityForResult}
+     * When started, the intent launches an {@link Activity} that sends an authorization request
+     * to the authorization service, using a
+     * [custom tab](https://developer.chrome.com/multidevice/android/customtabs).
+     * The parameters of this request are determined by both the authorization service
+     * configuration and the provided {@link EndSessionRequest request object}. Upon completion
+     * of this request, the activity that gets launched will call {@link Activity#setResult} with
+     * {@link Activity#RESULT_OK} and an {@link Intent} containing authorization completion
+     * information. If the user presses the back button or closes the browser tab, the launched
+     * activity will call {@link Activity#setResult} with
+     * {@link Activity#RESULT_CANCELED} without a data {@link Intent}. Note that
+     * {@link Activity#RESULT_OK} indicates the authorization request completed,
+     * not necessarily that it was a successful authorization.
+     *
+     * @throws android.content.ActivityNotFoundException if no suitable browser is available to
+     *     perform the authorization flow.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public Intent getEndSessionRequestIntent(
+            @NonNull EndSessionRequest request) {
+        return getEndSessionRequestIntent(request, createCustomTabsIntentBuilder().build());
+    }
+
+    /**
      * Sends a request to the authorization service to exchange a code granted as part of an
      * authorization request for a token. The result of this request will be sent to the provided
      * callback handler.
@@ -325,7 +489,9 @@ public class AuthorizationService {
                 clientAuthentication,
                 mClientConfiguration.getConnectionBuilder(),
                 SystemClock.INSTANCE,
-                callback)
+                callback,
+                mClientConfiguration.getSkipIssuerHttpsCheck(),
+                mClientConfiguration.getSkipNonceVerification())
                 .execute();
     }
 
@@ -366,7 +532,7 @@ public class AuthorizationService {
     }
 
     private Intent prepareAuthorizationRequestIntent(
-            AuthorizationRequest request,
+            AuthorizationManagementRequest request,
             CustomTabsIntent customTabsIntent) {
         checkNotDisposed();
 
@@ -388,8 +554,9 @@ public class AuthorizationService {
                 intent.getPackage(),
                 mBrowser.useCustomTab.toString());
 
-        Logger.debug("Initiating authorization request to %s",
-                request.configuration.authorizationEndpoint);
+        //TODO fix logger for configuration
+        //Logger.debug("Initiating authorization request to %s"
+        //request.configuration.authorizationEndpoint);
 
         return intent;
     }
@@ -402,6 +569,8 @@ public class AuthorizationService {
         private final ConnectionBuilder mConnectionBuilder;
         private TokenResponseCallback mCallback;
         private Clock mClock;
+        private boolean mSkipIssuerHttpsCheck;
+        private boolean mSkipNonceVerification;
 
         private AuthorizationException mException;
 
@@ -409,12 +578,16 @@ public class AuthorizationService {
                          @NonNull ClientAuthentication clientAuthentication,
                          @NonNull ConnectionBuilder connectionBuilder,
                          Clock clock,
-                         TokenResponseCallback callback) {
+                         TokenResponseCallback callback,
+                         Boolean skipIssuerHttpsCheck,
+                         Boolean skipNonceVerification) {
             mRequest = request;
             mClientAuthentication = clientAuthentication;
             mConnectionBuilder = connectionBuilder;
             mClock = clock;
             mCallback = callback;
+            mSkipIssuerHttpsCheck = skipIssuerHttpsCheck;
+            mSkipNonceVerification = skipNonceVerification;
         }
 
         @Override
@@ -522,7 +695,12 @@ public class AuthorizationService {
                 }
 
                 try {
-                    idToken.validate(mRequest, mClock);
+                    idToken.validate(
+                            mRequest,
+                            mClock,
+                            mSkipIssuerHttpsCheck,
+                            mSkipNonceVerification
+                    );
                 } catch (AuthorizationException ex) {
                     mCallback.onTokenRequestCompleted(null, ex);
                     return;

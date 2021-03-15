@@ -19,12 +19,11 @@ import static net.openid.appauth.Preconditions.checkArgument;
 import static net.openid.appauth.Preconditions.checkNotEmpty;
 import static net.openid.appauth.Preconditions.checkNotNull;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import net.openid.appauth.internal.Logger;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -620,7 +619,7 @@ public class AuthState {
                 mLastAuthorizationResponse.request.configuration,
                 mLastAuthorizationResponse.request.clientId)
                 .setGrantType(GrantTypeValues.REFRESH_TOKEN)
-                .setScope(mLastAuthorizationResponse.request.scope)
+                .setScope(null)
                 .setRefreshToken(mRefreshToken)
                 .setAdditionalParameters(additionalParameters)
                 .build();

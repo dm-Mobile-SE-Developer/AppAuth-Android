@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 import java.util.HashSet;
-import junit.runner.Version;
+
 import net.openid.appauth.BuildConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk=16)
+@Config(sdk = 16)
 public class VersionedBrowserMatcherTest {
 
     private VersionedBrowserMatcher mBrowserMatcher;

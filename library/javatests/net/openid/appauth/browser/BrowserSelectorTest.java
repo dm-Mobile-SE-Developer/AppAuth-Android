@@ -14,10 +14,10 @@
 
 package net.openid.appauth.browser;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 import static net.openid.appauth.browser.BrowserSelector.BROWSER_INTENT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -33,10 +33,13 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.text.TextUtils;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.openid.appauth.BuildConfig;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +51,7 @@ import org.robolectric.annotation.Config;
 
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk=16)
+@Config(sdk = 16)
 public class BrowserSelectorTest {
 
     private static final String SCHEME_HTTP = "http";
@@ -87,13 +90,20 @@ public class BrowserSelectorTest {
 
     private static final TestBrowser[] NO_BROWSERS = new TestBrowser[0];
 
+    private AutoCloseable mMockitoCloseable;
+
     @Mock Context mContext;
     @Mock PackageManager mPackageManager;
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        mMockitoCloseable = MockitoAnnotations.openMocks(this);
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mMockitoCloseable.close();
     }
 
     @Test
@@ -178,7 +188,7 @@ public class BrowserSelectorTest {
     @Test
     public void testSelect_matcherPrefersStandaloneChrome() throws NameNotFoundException {
         // in this scenario, the user has firefox as their default but the app insists on using
-        // chrome via a browser whitelist.
+        // chrome via a browser allowList.
         setBrowserList(FIREFOX, CHROME, DOLPHIN);
         setBrowsersWithWarmupSupport(FIREFOX, CHROME);
         checkSelectedBrowser(CHROME,
@@ -408,7 +418,7 @@ public class BrowserSelectorTest {
         }
 
         public TestBrowserBuilder addSignature(String signature) {
-            mSignatures.add(signature.getBytes(Charset.forName("UTF-8")));
+            mSignatures.add(signature.getBytes(StandardCharsets.UTF_8));
             return this;
         }
 

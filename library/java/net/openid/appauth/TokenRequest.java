@@ -20,10 +20,10 @@ import static net.openid.appauth.Preconditions.checkNotNull;
 import static net.openid.appauth.Preconditions.checkNullOrNotEmpty;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -118,8 +118,9 @@ public class TokenRequest {
      * The service's {@link AuthorizationServiceConfiguration configuration}.
      * This configuration specifies how to connect to a particular OAuth provider.
      * Configurations may be
-     * {@link AuthorizationServiceConfiguration#AuthorizationServiceConfiguration(Uri,
-     * Uri, Uri) created manually}, or
+     * {@link
+     * AuthorizationServiceConfiguration#AuthorizationServiceConfiguration(Uri, Uri, Uri, Uri)
+     * created manually}, or
      * {@link AuthorizationServiceConfiguration#fetchFromUrl(Uri,
      * AuthorizationServiceConfiguration.RetrieveConfigurationCallback)
      * via an OpenID Connect Discovery Document}.

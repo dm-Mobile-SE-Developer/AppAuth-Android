@@ -17,10 +17,9 @@ package net.openid.appauth.internal;
 import android.net.Uri;
 import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
-import android.support.customtabs.CustomTabsService;
+import androidx.browser.customtabs.CustomTabsService;
 
 import net.openid.appauth.BuildConfig;
-import net.openid.appauth.internal.UriUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +34,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk=16)
+@Config(sdk = 16)
 public class UriUtilTest {
 
     private UrlQuerySanitizer mSanitizer;

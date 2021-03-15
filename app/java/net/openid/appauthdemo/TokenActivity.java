@@ -14,33 +14,34 @@
 
 package net.openid.appauthdemo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.MainThread;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.MainThread;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.snackbar.Snackbar;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
 import net.openid.appauth.AuthorizationResponse;
 import net.openid.appauth.AuthorizationService;
+import net.openid.appauth.AuthorizationServiceConfiguration;
 import net.openid.appauth.AuthorizationServiceDiscovery;
 import net.openid.appauth.ClientAuthentication;
+import net.openid.appauth.EndSessionRequest;
 import net.openid.appauth.TokenRequest;
 import net.openid.appauth.TokenResponse;
-
 import okio.Okio;
-
 import org.joda.time.format.DateTimeFormat;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,6 +55,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+
 /**
  * Displays the authorized state of the user. This activity is provided with the outcome of the
  * authorization flow, which it uses to negotiate the final authorized state,
@@ -65,6 +67,8 @@ public class TokenActivity extends AppCompatActivity {
     private static final String TAG = "TokenActivity";
 
     private static final String KEY_USER_INFO = "userInfo";
+
+    private static final int END_SESSION_REQUEST_CODE = 911;
 
     private AuthorizationService mAuthService;
     private AuthStateManager mStateManager;
@@ -187,7 +191,7 @@ public class TokenActivity extends AppCompatActivity {
 
         AuthState state = mStateManager.getCurrent();
 
-        TextView refreshTokenInfoView = (TextView) findViewById(R.id.refresh_token_info);
+        TextView refreshTokenInfoView = findViewById(R.id.refresh_token_info);
         refreshTokenInfoView.setText((state.getRefreshToken() == null)
                 ? R.string.no_refresh_token_returned
                 : R.string.refresh_token_returned);
@@ -231,7 +235,7 @@ public class TokenActivity extends AppCompatActivity {
             viewProfileButton.setOnClickListener((View view) -> fetchUserInfo());
         }
 
-        ((Button)findViewById(R.id.sign_out)).setOnClickListener((View view) -> signOut());
+        findViewById(R.id.sign_out).setOnClickListener((View view) -> endSession());
 
         View userInfoCard = findViewById(R.id.userinfo_card);
         JSONObject userInfo = mUserInfoJson.get();
@@ -381,12 +385,47 @@ public class TokenActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == END_SESSION_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            signOut();
+            finish();
+        } else {
+            displayEndSessionCancelled();
+        }
+    }
+
+    private void displayEndSessionCancelled() {
+        Snackbar.make(findViewById(R.id.coordinator),
+            "Sign out canceled",
+            Snackbar.LENGTH_SHORT)
+                .show();
+    }
+
     @MainThread
     private void showSnackbar(String message) {
         Snackbar.make(findViewById(R.id.coordinator),
                 message,
                 Snackbar.LENGTH_SHORT)
                 .show();
+    }
+
+    @MainThread
+    private void endSession() {
+        AuthState currentState = mStateManager.getCurrent();
+        AuthorizationServiceConfiguration config =
+                currentState.getAuthorizationServiceConfiguration();
+        if (config.endSessionEndpoint != null) {
+            Intent endSessionIntent = mAuthService.getEndSessionRequestIntent(
+                    new EndSessionRequest.Builder(
+                        config,
+                        currentState.getIdToken(),
+                        mConfiguration.getEndSessionRedirectUri()).build());
+            startActivityForResult(endSessionIntent, END_SESSION_REQUEST_CODE);
+        } else {
+            signOut();
+        }
     }
 
     @MainThread

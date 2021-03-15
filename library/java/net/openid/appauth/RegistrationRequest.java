@@ -21,8 +21,8 @@ import static net.openid.appauth.Preconditions.checkNotEmpty;
 import static net.openid.appauth.Preconditions.checkNotNull;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -79,8 +79,9 @@ public class RegistrationRequest {
      * The service's {@link AuthorizationServiceConfiguration configuration}.
      * This configuration specifies how to connect to a particular OAuth provider.
      * Configurations may be
-     * {@link AuthorizationServiceConfiguration#AuthorizationServiceConfiguration(Uri,
-     * Uri, Uri) created manually}, or
+     * {@link
+     * AuthorizationServiceConfiguration#AuthorizationServiceConfiguration(Uri, Uri, Uri, Uri)
+     * created manually}, or
      * {@link AuthorizationServiceConfiguration#fetchFromUrl(Uri,
      * AuthorizationServiceConfiguration.RetrieveConfigurationCallback)
      * via an OpenID Connect Discovery Document}.

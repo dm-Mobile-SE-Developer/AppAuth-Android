@@ -19,15 +19,13 @@ import static net.openid.appauth.Preconditions.checkNotNull;
 
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import net.openid.appauth.AuthorizationException.GeneralErrors;
-
 import net.openid.appauth.connectivity.ConnectionBuilder;
 import net.openid.appauth.connectivity.DefaultConnectionBuilder;
 import net.openid.appauth.internal.Logger;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -63,6 +61,7 @@ public class AuthorizationServiceConfiguration {
     private static final String KEY_TOKEN_ENDPOINT = "tokenEndpoint";
     private static final String KEY_REGISTRATION_ENDPOINT = "registrationEndpoint";
     private static final String KEY_DISCOVERY_DOC = "discoveryDoc";
+    private static final String KEY_END_SESSION_ENPOINT = "endSessionEndpoint";
 
     /**
      * The authorization service's endpoint.
@@ -75,6 +74,12 @@ public class AuthorizationServiceConfiguration {
      */
     @NonNull
     public final Uri tokenEndpoint;
+
+    /**
+     * The end session service's endpoint;
+     */
+    @Nullable
+    public final Uri endSessionEndpoint;
 
     /**
      * The authorization service's client registration endpoint.
@@ -106,7 +111,6 @@ public class AuthorizationServiceConfiguration {
 
     /**
      * Creates a service configuration for a basic OAuth2 provider.
-     *
      * @param authorizationEndpoint The
      *     [authorization endpoint URI](https://tools.ietf.org/html/rfc6749#section-3.1)
      *     for the service.
@@ -115,15 +119,37 @@ public class AuthorizationServiceConfiguration {
      *     for the service.
      * @param registrationEndpoint The optional
      *     [client registration endpoint URI](https://tools.ietf.org/html/rfc7591#section-3)
-     *     for the service.
      */
     public AuthorizationServiceConfiguration(
             @NonNull Uri authorizationEndpoint,
             @NonNull Uri tokenEndpoint,
             @Nullable Uri registrationEndpoint) {
+        this(authorizationEndpoint, tokenEndpoint, registrationEndpoint, null);
+    }
+
+    /**
+     * Creates a service configuration for a basic OAuth2 provider.
+     * @param authorizationEndpoint The
+     *     [authorization endpoint URI](https://tools.ietf.org/html/rfc6749#section-3.1)
+     *     for the service.
+     * @param tokenEndpoint The
+     *     [token endpoint URI](https://tools.ietf.org/html/rfc6749#section-3.2)
+     *     for the service.
+     * @param registrationEndpoint The optional
+     *     [client registration endpoint URI](https://tools.ietf.org/html/rfc7591#section-3)
+     * @param endSessionEndpoint The optional
+     *     [end session endpoint URI](https://tools.ietf.org/html/rfc6749#section-2.2)
+     *     for the service.
+     */
+    public AuthorizationServiceConfiguration(
+            @NonNull Uri authorizationEndpoint,
+            @NonNull Uri tokenEndpoint,
+            @Nullable Uri registrationEndpoint,
+            @Nullable Uri endSessionEndpoint) {
         this.authorizationEndpoint = checkNotNull(authorizationEndpoint);
         this.tokenEndpoint = checkNotNull(tokenEndpoint);
         this.registrationEndpoint = registrationEndpoint;
+        this.endSessionEndpoint = endSessionEndpoint;
         this.discoveryDoc = null;
     }
 
@@ -140,6 +166,7 @@ public class AuthorizationServiceConfiguration {
         this.authorizationEndpoint = discoveryDoc.getAuthorizationEndpoint();
         this.tokenEndpoint = discoveryDoc.getTokenEndpoint();
         this.registrationEndpoint = discoveryDoc.getRegistrationEndpoint();
+        this.endSessionEndpoint = discoveryDoc.getEndSessionEndpoint();
     }
 
     /**
@@ -152,6 +179,9 @@ public class AuthorizationServiceConfiguration {
         JsonUtil.put(json, KEY_TOKEN_ENDPOINT, tokenEndpoint.toString());
         if (registrationEndpoint != null) {
             JsonUtil.put(json, KEY_REGISTRATION_ENDPOINT, registrationEndpoint.toString());
+        }
+        if (endSessionEndpoint != null) {
+            JsonUtil.put(json, KEY_END_SESSION_ENPOINT, endSessionEndpoint.toString());
         }
         if (discoveryDoc != null) {
             JsonUtil.put(json, KEY_DISCOVERY_DOC, discoveryDoc.docJson);
@@ -193,7 +223,8 @@ public class AuthorizationServiceConfiguration {
             return new AuthorizationServiceConfiguration(
                     JsonUtil.getUri(json, KEY_AUTHORIZATION_ENDPOINT),
                     JsonUtil.getUri(json, KEY_TOKEN_ENDPOINT),
-                    JsonUtil.getUriIfDefined(json, KEY_REGISTRATION_ENDPOINT));
+                    JsonUtil.getUriIfDefined(json, KEY_REGISTRATION_ENDPOINT),
+                    JsonUtil.getUriIfDefined(json, KEY_END_SESSION_ENPOINT));
         }
     }
 
